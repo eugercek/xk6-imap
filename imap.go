@@ -1,7 +1,6 @@
 package imap
 
 import (
-	"fmt"
 	"io/ioutil"
 	"mime/quotedprintable"
 	"net/textproto"
@@ -19,26 +18,24 @@ func init() {
 
 type Imap struct{}
 
-func (*Imap) Read(email, password, URL string, port int, header textproto.MIMEHeader) string {
+// Simple function for one time read
+func (*Imap) Read(email, password, URL string, port int, header textproto.MIMEHeader) (string, string) {
 	c, err := client.DialTLS(URL+":"+strconv.Itoa(port), nil)
 
 	if err != nil {
-		fmt.Println(err)
-		return ""
+		return "", err.Error()
 	}
 
 	defer c.Logout()
 
 	if err := c.Login(email, password); err != nil {
-		fmt.Println(err)
-		return ""
+		return "", err.Error()
 	}
 
 	_, err = c.Select("INBOX", true)
 
 	if err != nil {
-		fmt.Println(err)
-		return ""
+		return "", err.Error()
 	}
 
 	criteria := &imap.SearchCriteria{
@@ -48,8 +45,7 @@ func (*Imap) Read(email, password, URL string, port int, header textproto.MIMEHe
 	ids, err := c.Search(criteria)
 
 	if err != nil {
-		fmt.Println(err)
-		return ""
+		return "", err.Error()
 	}
 
 	seqSet := new(imap.SeqSet)
@@ -62,15 +58,13 @@ func (*Imap) Read(email, password, URL string, port int, header textproto.MIMEHe
 	err = c.Fetch(seqSet, items, messages)
 
 	if err != nil {
-		fmt.Println(err)
-		return ""
+		return "", err.Error()
 	}
 
 	msg := <-messages
 
 	if msg == nil {
-		fmt.Println("No message")
-		return ""
+		return "", err.Error()
 	}
 
 	section, _ := imap.ParseBodySectionName("BODY[TEXT]")
@@ -80,8 +74,8 @@ func (*Imap) Read(email, password, URL string, port int, header textproto.MIMEHe
 	bs, err := ioutil.ReadAll(qr)
 
 	if err != nil {
-		fmt.Println("bs: ", "err is ", err)
+		return "", err.Error()
 	}
 
-	return string(bs)
+	return string(bs), "" // TODO Maybe return "OK"
 }
