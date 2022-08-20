@@ -9,6 +9,7 @@ import (
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 
+	ec "github.com/eugercek/xk6-imap/client"
 	"go.k6.io/k6/js/modules"
 )
 
@@ -19,6 +20,7 @@ func init() {
 type Imap struct{}
 
 // Simple function for one time read
+// Use EmailClient for more complex needs
 func (*Imap) Read(email, password, URL string, port int, header textproto.MIMEHeader) (string, string) {
 	c, err := client.DialTLS(URL+":"+strconv.Itoa(port), nil)
 
@@ -78,4 +80,14 @@ func (*Imap) Read(email, password, URL string, port int, header textproto.MIMEHe
 	}
 
 	return string(bs), "" // TODO Maybe return "OK"
+}
+
+// Create new email client
+func (*Imap) EmailClient(email, password, url string, port int) *ec.EmailClient {
+	return &ec.EmailClient{
+		Email:    email,
+		Password: password,
+		Url:      url,
+		Port:     port,
+	}
 }

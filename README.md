@@ -19,10 +19,46 @@ export default function () {
   );
 
   if (error != "") {
-    console.log(`[ERROR] ${error}`);
+    console.error(error);
   } else {
     console.log(message);
   }
+}
+```
+
+## `emailClient`
+
+Use email client if you need to read multiple messages and don't want to login everytime.
+
+```js
+import imap from "k6/x/imap";
+
+export default function () {
+  const client = imap.emailClient(
+    "my_email@gmail.com",
+    "password123",
+    "imap.gmail.com",
+    993
+  );
+
+  const loginError = client.login();
+
+  if (loginError != "") {
+    console.error(loginError);
+    return;
+  }
+
+  let [message, err] = client.read({
+    Subject: ["Verify your email"],
+  });
+
+  if (err != "") {
+    console.error(err);
+    return;
+  }
+
+  console.log(message);
+  client.logOut();
 }
 ```
 
